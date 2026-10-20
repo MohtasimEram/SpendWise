@@ -148,7 +148,3 @@ lib/
 - **Strict Firestore Rules:** Cloud data is locked strictly to `request.auth.uid == userId`, ensuring users can never read or write another user's financial logs.
 
 ---
-
-## 📄 License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
