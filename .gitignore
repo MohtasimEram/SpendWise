@@ -58,3 +58,5 @@ GITHUB_DESC.md
 github_description.txt
 *.pptx
 
+
+android/app/google-services.json
