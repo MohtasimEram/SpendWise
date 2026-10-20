@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers ----------
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    function okId(id) { return id.size() > 0 && id.size() <= 100; }
+    function str(v, max) { return v is string && v.size() <= max; }
+    function name(v, max) { return v is string && v.size() >= 1 && v.size() <= max; }
+    function amount(v) { return v is number && v > 0 && v < 1000000000000; }
+    function money(v) { return v is number && v >= 0 && v < 1000000000000000; }
+
+    // ---------- per-collection validation ----------
+    function validTxn(d) {
+      return d.keys().hasAll(['amount', 'currency', 'base', 'income', 'cat', 'date'])
+        && d.keys().hasOnly(['amount', 'currency', 'base', 'income', 'cat', 'date', 'note', 'tags'])
+        && amount(d.amount) && money(d.base)
+        && d.currency is string && d.currency.size() == 3
+        && d.income is bool
+        && str(d.cat, 100)
+        && d.date is timestamp
+        && (!('note' in d) || str(d.note, 200))
+        && (!('tags' in d) || (d.tags is list && d.tags.size() <= 10));
+    }
+    function validCategory(d) {
+      return d.keys().hasAll(['name', 'icon', 'color', 'income'])
+        && d.keys().hasOnly(['name', 'icon', 'color', 'income', 'parent'])
+        && name(d.name, 40) && str(d.icon, 20)
+        && d.color is int && d.income is bool
+        && (!('parent' in d) || d.parent == null || str(d.parent, 100));
+    }
+    function validBudget(d) {
+      return d.keys().hasOnly(['limit', 'weekly'])
+        && d.keys().hasAll(['limit', 'weekly'])
+        && amount(d.limit) && d.weekly is bool;
+    }
+    function validRecurring(d) {
+      return d.keys().hasAll(['title', 'amount', 'currency', 'income', 'cat', 'freq', 'next'])
+        && d.keys().hasOnly(['title', 'amount', 'currency', 'income', 'cat', 'freq', 'next', 'day'])
+        && name(d.title, 60) && amount(d.amount)
+        && d.currency is string && d.currency.size() == 3
+        && d.income is bool && str(d.cat, 100)
+        && d.freq in ['daily', 'weekly', 'monthly', 'yearly']
+        && d.next is timestamp
+        && (!('day' in d) || (d.day is int && d.day >= 1 && d.day <= 31));
+    }
+    function validGoal(d) {
+      return d.keys().hasAll(['name', 'target', 'saved'])
+        && d.keys().hasOnly(['name', 'target', 'saved'])
+        && name(d.name, 60) && amount(d.target) && money(d.saved);
+    }
+    function validAccount(d) {
+      return d.keys().hasAll(['name', 'balance', 'liability'])
+        && d.keys().hasOnly(['name', 'balance', 'liability'])
+        && name(d.name, 60) && money(d.balance) && d.liability is bool;
+    }
+    function validGroup(d) {
+      return d.keys().hasAll(['name', 'members', 'expenses', 'settles'])
+        && d.keys().hasOnly(['name', 'members', 'expenses', 'settles'])
+        && name(d.name, 60)
+        && d.members is list && d.members.size() >= 2 && d.members.size() <= 20
+        && d.expenses is list && d.expenses.size() <= 500
+        && d.settles is list && d.settles.size() <= 500;
+    }
+
+    // ---------- every user can only touch their own tree ----------
+    match /users/{uid} {
+      match /transactions/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && okId(id) && validTxn(request.resource.data);
+      }
+      match /categories/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && okId(id) && validCategory(request.resource.data);
+      }
+      match /budgets/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && okId(id) && validBudget(request.resource.data);
+      }
+      match /recurring/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && okId(id) && validRecurring(request.resource.data);
+      }
+      match /goals/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && okId(id) && validGoal(request.resource.data);
+      }
+      match /accounts/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && okId(id) && validAccount(request.resource.data);
+      }
+      match /groups/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && okId(id) && validGroup(request.resource.data);
+      }
+    }
+
+    // Everything else is denied by default.
+  }
+}

@@ -1,0 +1,53 @@
+name: spendwise
+description: Modern, offline-first expense tracker built with Flutter and Firebase.
+publish_to: none
+version: 1.2.0+3
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.29.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  provider: ^6.1.2
+  fl_chart: ^0.69.0
+  google_fonts: ^6.2.1
+  intl: ^0.19.0
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.2
+  http: ^1.2.2
+  image_picker: ^1.1.2
+  google_mlkit_text_recognition: ^0.13.1
+  csv: ^6.0.0
+  pdf: ^3.11.1
+  printing: ^5.13.3
+  share_plus: ^10.0.2
+  path_provider: ^2.1.4
+  uuid: ^4.5.1
+  crypto: ^3.0.3
+  google_sign_in: 6.2.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.1
+
+# App icon: after `flutter create .` run `dart run flutter_launcher_icons`
+# (or copy the ready-made files from platform_icons/ - see README).
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 23
+  remove_alpha_ios: true
+  adaptive_icon_background: "#14503C"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  adaptive_icon_monochrome: "assets/icon/app_icon_monochrome.png"
+
+flutter:
+  uses-material-design: true
